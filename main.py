@@ -57,14 +57,11 @@ def get_images_jpg() -> dict:
         
         try:
             with open(image_path, "rb") as image_file:
-                # Codifica e adiciona à lista
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
 
                 if dict_father not in images_encoded:
                     images_encoded[dict_father] = []
                 
-                # Adicionamos a nova imagem à lista daquela pasta
-                # O índice será o tamanho atual da lista
                 index = len(images_encoded[dict_father])
                 images_encoded[dict_father].append({f"image_{index}": encoded_string})
 
