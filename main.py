@@ -1,7 +1,6 @@
 import base64
 from pathlib import Path
 from typing import Iterator
-from urllib import response
 from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessageChunk, SystemMessage, HumanMessage
 
@@ -13,7 +12,7 @@ llm = ChatOllama(
     top_p=0.9
 )
 
-def send_to_gemma4(image_encoded) -> Iterator[AIMessageChunk]:
+def send_to_gemma4(images_patient) -> Iterator[AIMessageChunk]:
     system_prompt = """
     Voce é um médico radiologista especialista em encontrar findings em imagens de raio-x de torax.
 
@@ -32,8 +31,9 @@ def send_to_gemma4(image_encoded) -> Iterator[AIMessageChunk]:
     """
 
     user_prompt = [
-        {"type": "text", "text": "Indique os findings do raio-x de tórax a seguir:"},
-        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_encoded}"}}
+        {"type": "text", "text": "Indique os findings dos raios-x de tórax (PA e PG) a seguir:"},
+        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_0"]}"}},
+        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_1"]}"}}
     ]
 
     messages = [
