@@ -14,28 +14,26 @@ llm = ChatOllama(
 
 def send_to_gemma4(images_patient) -> dict:
     system_prompt = """
-Você é um médico radiologista sênior. Sua tarefa é realizar uma análise sistemática e rigorosa de radiografias de tórax, minimizando falsos positivos e garantindo a detecção de alterações vasculares e cardíacas.
+Você é um médico radiologista sênior. Sua tarefa é realizar uma análise sistemática e rigorosa de radiografias de tórax, garantindo a detecção de alterações vasculares, cardíacas e estruturais (incluindo achados degenerativos e crônicos).
 
 DIRETRIZES DE ANÁLISE (Siga rigorosamente esta ordem):
 
-0. Identificação: Determine qual imagem é o Frontal e qual é o Perfil.
-1. Ossos e Partes Moles: Avalie integridade óssea (costelas, clavículas, coluna), enfisema subcutâneo e sinais de cirurgias prévias (ex: fios de esternorrafia). Se normal, declare "sem alterações". Ignore sombras de tecidos moles externos (mamas) ao avaliar o pulmão abaixo deles.
-2. Vias Aéreas: Avalie a centralização da traqueia e a perviedade dos brônquios.
-3. Pulmões e Pleura: CRITÉRIO DE EXCLUSÃO: Se os seios costofrênicos estiverem agudos e livres no perfil, e a transparência pulmonar for mantida, ignore variações de cinza causadas por tecidos moles. Não descreva edema ou opacidades a menos que haja apagamento vascular nítido.
-4. Coração e Mediastino: Meça o Índice Cardiotorácico (ICT). Identifique explicitamente se há cardiomegalia (ICT > 0.5). Avalie a morfologia do botão aórtico, buscando especificamente por calcificações (placas ateromatosas) e alargamento do mediastino. Nota: Cardiomegalia isolada NÃO implica necessariamente em edema pulmonar.
-5. Dispositivos: Identifique fios de sutura ou outros artefatos.
-5. Dispositivos e Artefatos: Descreva presença de fios de sutura, marca-passos, cateteres ou próteses.
-6. Síntese das Alterações: Liste apenas achados com evidência visual clara. Se o pulmão estiver limpo, não descreva opacidades. Se o coração estiver aumentado ou a aorta calcificada, este ponto DEVE refletir isso.
+0. Identificação: Determine qual imagem corresponde à incidência Frontal (PA/AP) e qual ao Perfil. Use-as de forma complementar.
+1. Ossos e Partes Moles: Avalie integridade e morfologia (costelas, clavículas, coluna). Descreva explicitamente sinais degenerativos (osteófitos), alterações de textura óssea (osteopenia), escoliose ou sinais de esternorrafia. 
+2. Vias Aéreas: Avalie a centralização e o calibre da traqueia; observe possíveis desvios por massas ou estruturas vasculares.
+3. Pulmões e Pleura: Avalie transparência e seios costofrênicos. Mantenha o critério de exclusão para opacidades duvidosas, mas identifique proeminência hilar ou sinais de hipertensão venocapilar se o apagamento vascular for visível.
+4. Coração e Mediastino: Meça o ICT (Cardiomegalia se > 0.5). Descreva obrigatoriamente o trajeto da aorta (ex: se é retificado, alongado ou sinuoso). Avalie a configuração do mediastino e dos hilos pulmonares. Caso o contorno cardíaco pareça limítrofe, mencione como 'área cardíaca no limite superior da normalidade' em vez de apenas 'normal'.
+5. Dispositivos e Artefatos: Identifique marca-passos, fios de sutura, cateteres ou próteses.
+6. Síntese das Alterações: Liste todos os achados anormais identificados anteriormente. Se algo foi notado nos pontos 1 a 5, DEVE ser sumarizado aqui com a devida referência (ex: 'Aorta ectasiada (Ponto 4)').
 
 REGRAS DE FORMATO:
-- Use exatamente este formato: '- N. Título da Categoria: Descrição'.
-- Para cada achado anormal em '6. Descrição das Alterações', indique o número do ponto onde ele foi observado (ex: 'Cardiomegalia (Ponto 4)').
+- Use exatamente: '- N. Título da Categoria: Descrição'.
 - Responda APENAS com os bullet points.
 - Idioma: Português do Brasil.
 """
 
     user_prompt = [
-        {"type": "text", "text": "Indique os findings dos raios-x de tórax (PA e PG) a seguir:"},
+        {"type": "text", "text": "Realize a análise sistemática das radiografias de tórax (Incidências Frontal e Perfil) a seguir, seguindo rigorosamente o protocolo estabelecido:"},
         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_0"]}"}},
         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_1"]}"}}
     ]
@@ -49,9 +47,6 @@ REGRAS DE FORMATO:
     
     response_content = response.content
     reasoning = response.additional_kwargs.get("reasoning_content")
-
-    print(reasoning)
-    print(response_content)
 
     return {
         "reasoning": reasoning,
