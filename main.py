@@ -12,23 +12,27 @@ llm = ChatOllama(
     top_p=0.9
 )
 
-def send_to_gemma4(images_patient) -> AIMessage:
+def send_to_gemma4(images_patient) -> dict:
     system_prompt = """
-    Voce é um médico radiologista especialista em encontrar findings em imagens de raio-x de torax.
+Você é um médico radiologista sênior. Sua tarefa é realizar uma análise sistemática e rigorosa de radiografias de tórax, minimizando falsos positivos e garantindo a detecção de alterações vasculares e cardíacas.
 
-        A análize da imagem desse seguir o seguinte pipeline nessa ordem:
-    1. Ossos e Partes Moles: Checar fraturas em costelas, clavículas e coluna; avaliar cúpulas diafragmáticas e buscar enfisema subcutâneo ou sombras mamárias.
-    2. Vias Aéreas: Avaliar se a traqueia está centralizada ou desviada e a perviedade dos brônquios principais.
-    3. Pulmões e Pleura: Buscar opacidades (nódulos, massas, consolidações) ou pneumotórax; checar se os seios costofrênicos estão livres ou velados (derrame).
-    4. Coração e Mediastino: Avaliar se há cardiomegalia (ICT > 50%) e checar a anatomia do mediastino, botão aórtico e hilos.
-    5. Dispositivos (Se houver): Descrever presença e posicionamento de acessos, cateteres, tubos ou marca-passos.
-    6. Descrição das Alterações: Se houver achados anormais, descrever o tipo de lesão e a localização exata (ex: "opacidade em terço inferior do pulmão direito").
+DIRETRIZES DE ANÁLISE (Siga rigorosamente esta ordem):
 
-        A resposta deve seguir o seguinte formato:
-    - Bullet points (ex: '- 1. Ossos e Partes Moles:') de cada analize realizada (1 a 6).
-    - Caso encontre alterações descreva quais foram e em qual ponto de análize que indenticou isso (ex: 'Anomaliza x (analise 1)').
-    - Responda APENAS com esses Bullet Points em Potugues do Brasil.
-    """
+0. Identificação: Determine qual imagem é o Frontal e qual é o Perfil.
+1. Ossos e Partes Moles: Avalie integridade óssea (costelas, clavículas, coluna), enfisema subcutâneo e sinais de cirurgias prévias (ex: fios de esternorrafia). Se normal, declare "sem alterações". Ignore sombras de tecidos moles externos (mamas) ao avaliar o pulmão abaixo deles.
+2. Vias Aéreas: Avalie a centralização da traqueia e a perviedade dos brônquios.
+3. Pulmões e Pleura: CRITÉRIO DE EXCLUSÃO: Se os seios costofrênicos estiverem agudos e livres no perfil, e a transparência pulmonar for mantida, ignore variações de cinza causadas por tecidos moles. Não descreva edema ou opacidades a menos que haja apagamento vascular nítido.
+4. Coração e Mediastino: Meça o Índice Cardiotorácico (ICT). Identifique explicitamente se há cardiomegalia (ICT > 0.5). Avalie a morfologia do botão aórtico, buscando especificamente por calcificações (placas ateromatosas) e alargamento do mediastino. Nota: Cardiomegalia isolada NÃO implica necessariamente em edema pulmonar.
+5. Dispositivos: Identifique fios de sutura ou outros artefatos.
+5. Dispositivos e Artefatos: Descreva presença de fios de sutura, marca-passos, cateteres ou próteses.
+6. Síntese das Alterações: Liste apenas achados com evidência visual clara. Se o pulmão estiver limpo, não descreva opacidades. Se o coração estiver aumentado ou a aorta calcificada, este ponto DEVE refletir isso.
+
+REGRAS DE FORMATO:
+- Use exatamente este formato: '- N. Título da Categoria: Descrição'.
+- Para cada achado anormal em '6. Descrição das Alterações', indique o número do ponto onde ele foi observado (ex: 'Cardiomegalia (Ponto 4)').
+- Responda APENAS com os bullet points.
+- Idioma: Português do Brasil.
+"""
 
     user_prompt = [
         {"type": "text", "text": "Indique os findings dos raios-x de tórax (PA e PG) a seguir:"},
@@ -41,9 +45,18 @@ def send_to_gemma4(images_patient) -> AIMessage:
         HumanMessage(user_prompt)
     ] 
 
-    response = llm.invoke(messages)
+    response = llm.invoke(messages, reasoning=True)
+    
+    response_content = response.content
+    reasoning = response.additional_kwargs.get("reasoning_content")
 
-    return response
+    print(reasoning)
+    print(response_content)
+
+    return {
+        "reasoning": reasoning,
+        "response": response_content
+    }
 
 def get_images_jpg() -> dict:
     path = Path.home() / "Downloads" / "HUAC-DICOM-TORAX-DCM" / "jpg-images" # obs: para usar path.home() tem que usar / para separa os diretorios
@@ -74,7 +87,7 @@ def get_images_jpg() -> dict:
 
 def images_patient_responses():
     images_patients = get_images_jpg()
-    dicts_responses = {key: send_to_gemma4(images_patients[key]).text for key in images_patients.keys()}
+    dicts_responses = {key: send_to_gemma4(images_patients[key]) for key in images_patients.keys()}
 
     return dicts_responses
 
