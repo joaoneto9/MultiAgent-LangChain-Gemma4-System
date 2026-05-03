@@ -1,8 +1,8 @@
 import base64
+import pandas as pd
 from pathlib import Path
-from typing import Iterator
 from langchain_ollama import ChatOllama
-from langchain_core.messages import AIMessageChunk, SystemMessage, HumanMessage
+from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
 llm = ChatOllama(
     model="gemma4:e4b",
@@ -12,7 +12,7 @@ llm = ChatOllama(
     top_p=0.9
 )
 
-def send_to_gemma4(images_patient) -> Iterator[AIMessageChunk]:
+def send_to_gemma4(images_patient) -> AIMessage:
     system_prompt = """
     Voce é um médico radiologista especialista em encontrar findings em imagens de raio-x de torax.
 
@@ -25,9 +25,9 @@ def send_to_gemma4(images_patient) -> Iterator[AIMessageChunk]:
     6. Descrição das Alterações: Se houver achados anormais, descrever o tipo de lesão e a localização exata (ex: "opacidade em terço inferior do pulmão direito").
 
         A resposta deve seguir o seguinte formato:
-    - bullet points (ex: '- 1. Ossos e Partes Moles:') de cada analize realizada (1 a 6).
-    - caso encontre anomalias descreva quais foram e em qual ponto de análize que indenticou isso (ex: 'Anomaliza x (analise 1)').
-    - responda apenas com esses bullet points em Potugues do Brasil.
+    - Bullet points (ex: '- 1. Ossos e Partes Moles:') de cada analize realizada (1 a 6).
+    - Caso encontre alterações descreva quais foram e em qual ponto de análize que indenticou isso (ex: 'Anomaliza x (analise 1)').
+    - Responda APENAS com esses Bullet Points em Potugues do Brasil.
     """
 
     user_prompt = [
@@ -41,7 +41,9 @@ def send_to_gemma4(images_patient) -> Iterator[AIMessageChunk]:
         HumanMessage(user_prompt)
     ] 
 
-    return llm.stream(messages)
+    response = llm.invoke(messages)
+
+    return response
 
 def get_images_jpg() -> dict:
     path = Path.home() / "Downloads" / "HUAC-DICOM-TORAX-DCM" / "jpg-images" # obs: para usar path.home() tem que usar / para separa os diretorios
@@ -60,16 +62,26 @@ def get_images_jpg() -> dict:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
 
                 if dict_father not in images_encoded:
-                    images_encoded[dict_father] = []
+                    images_encoded[dict_father] = {}
                 
                 index = len(images_encoded[dict_father])
-                images_encoded[dict_father].append({f"image_{index}": encoded_string})
+                images_encoded[dict_father][f"image_{index}"] = encoded_string
 
         except Exception as e:
             print(f"Erro ao ler {image_path}: {e}")
 
     return images_encoded
 
-def print_stream(stream):
-    for chunk in stream:
-        print(chunk.text, end="")
+def images_patient_responses():
+    images_patients = get_images_jpg()
+    dicts_responses = {key: send_to_gemma4(images_patients[key]).text for key in images_patients.keys()}
+
+    return dicts_responses
+
+
+if __name__ == "__main__":
+    dict_responses = images_patient_responses()
+    df = pd.Series(dict_responses).to_frame(name="Gemma4-x-ray-findings")
+
+    df.to_json('gemma4_x_ray_findings.json', orient='index', indent=4, force_ascii=False)
+    
