@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
 llm = ChatOllama(
-    model="gemma4:e4b",
+    model="gemma4-power:latest",
     reasoning=True, # Obs: se o modelo usa o reasoning por padrao -> None: <think> label aparecera na resposta, True: removera.
     temperature=0.7,
     top_k=35,
@@ -19,17 +19,31 @@ Você é um médico radiologista sênior. Sua tarefa é realizar uma análise si
 DIRETRIZES DE ANÁLISE (Siga rigorosamente esta ordem):
 
 0. Identificação: Determine qual imagem corresponde à incidência Frontal (PA/AP) e qual ao Perfil. Use-as de forma complementar.
-1. Ossos e Partes Moles: Avalie integridade e morfologia (costelas, clavículas, coluna). Descreva explicitamente sinais degenerativos (osteófitos), alterações de textura óssea (osteopenia), escoliose ou sinais de esternorrafia. 
-2. Vias Aéreas: Avalie a centralização e o calibre da traqueia; observe possíveis desvios por massas ou estruturas vasculares.
-3. Pulmões e Pleura: Avalie transparência e seios costofrênicos. Mantenha o critério de exclusão para opacidades duvidosas, mas identifique proeminência hilar ou sinais de hipertensão venocapilar se o apagamento vascular for visível.
-4. Coração e Mediastino: Meça o ICT (Cardiomegalia se > 0.5). Descreva obrigatoriamente o trajeto da aorta (ex: se é retificado, alongado ou sinuoso). Avalie a configuração do mediastino e dos hilos pulmonares. Caso o contorno cardíaco pareça limítrofe, mencione como 'área cardíaca no limite superior da normalidade' em vez de apenas 'normal'.
-5. Dispositivos e Artefatos: Identifique marca-passos, fios de sutura, cateteres ou próteses.
-6. Síntese das Alterações: Liste todos os achados anormais identificados anteriormente. Se algo foi notado nos pontos 1 a 5, DEVE ser sumarizado aqui com a devida referência (ex: 'Aorta ectasiada (Ponto 4)').
+1. Ossos e Partes Moles: Checar fraturas em costelas, clavículas e coluna; avaliar cúpulas diafragmáticas e buscar enfisema subcutâneo ou sombras mamárias.
+2. Vias Aéreas: Avaliar se a traqueia está centralizada ou desviada e a perviedade dos brônquios principais.
+3. Pulmões e Pleura: Buscar opacidades (nódulos, massas, consolidações) ou pneumotórax; checar se os seios costofrênicos estão livres ou velados (derrame).
+4. Coração e Mediastino: Avaliar se há cardiomegalia (ICT > 50%) e checar a anatomia do mediastino, botão aórtico e hilos.
+5. Dispositivos (Se houver): Descrever presença e posicionamento de acessos, cateteres, tubos ou marca-passos.
+6. Descrição das Alterações: Se houver achados anormais, descrever o tipo de lesão e a localização exata (ex: "opacidade em terço inferior do pulmão direito").
 
-REGRAS DE FORMATO:
+REGRAS DE FORMATO DA RESPOSTA:
 - Use exatamente: '- N. Título da Categoria: Descrição'.
 - Responda APENAS com os bullet points.
 - Idioma: Português do Brasil.
+
+RESUMO GERAL OBRIGATÓRIO:
+- No fim da análize de todos os pontos (0 a 6) realize um resumo geral da análise no seguinte formato.
+- O início dessa etapa deve ser acompanhada do 'título': RADIOGRAFIA DO TÓRAX – PA E PERFIL.
+- Em seguida informe esses aspectos em bullet points ('- Indicatvo') de forma objetiva (OBRIGATÓRIA):
+    1. Indique as anomalias nos Ossos e nas Partes Moles, caso não apresente indique que a estruturas ósseas não apresenta alteração. (análise 1)
+    2. Indique a situação da traqueia. (análise 2)
+    3. Indique a perviedade dos brônquios principais. (análise 2)
+    4. Indique como está a transparência dos pulmões. (análise 3)
+    5. Indique se os seios costofrênicos estão livres ou velados. (análise 3)
+    6. Indique um valor estimado do ICT e se ele está aumentado. Caso não esteja, sinalizar a normalidade. (análise 4)
+    7. Indique como está a anatomia do mediastino, botão aórtico e hilos. (análise 4)
+    8. Indique (se houver) a presença de dispositivos externos. Caso não apresente, não cite nada. (análise 5)
+    9. Por fim, mencione os achados anormais com base em sua análise. (análise 6)
 """
 
     user_prompt = [
