@@ -5,7 +5,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
 llm = ChatOllama(
-    model="gemma4-power:latest",
+    model="gemma4:e4b",
     reasoning=True, # Obs: se o modelo usa o reasoning por padrao -> None: <think> label aparecera na resposta, True: removera.
     temperature=0.7,
     top_k=35,
@@ -31,10 +31,10 @@ REGRAS DE FORMATO DA RESPOSTA:
 - Responda APENAS com os bullet points.
 - Idioma: Português do Brasil.
 
-RESUMO GERAL OBRIGATÓRIO:
+RESUMO GERAL (OBRIGATÓRIO):
 - No fim da análize de todos os pontos (0 a 6) realize um resumo geral da análise no seguinte formato.
 - O início dessa etapa deve ser acompanhada do 'título': RADIOGRAFIA DO TÓRAX – PA E PERFIL.
-- Em seguida informe esses aspectos em bullet points ('- Indicatvo') de forma objetiva (OBRIGATÓRIA):
+- Em seguida informe esses aspectos em bullet points ('-') de forma objetiva (OBRIGATÓRIA):
     1. Indique as anomalias nos Ossos e nas Partes Moles, caso não apresente indique que a estruturas ósseas não apresenta alteração. (análise 1)
     2. Indique a situação da traqueia. (análise 2)
     3. Indique a perviedade dos brônquios principais. (análise 2)
@@ -47,7 +47,7 @@ RESUMO GERAL OBRIGATÓRIO:
 """
 
     user_prompt = [
-        {"type": "text", "text": "Realize a análise sistemática das radiografias de tórax (Incidências Frontal e Perfil) a seguir, seguindo rigorosamente o protocolo estabelecido:"},
+        {"type": "text", "text": "Realize a análise sistemática das radiografias de tórax (Incidências Frontal e Perfil) a seguir, seguindo rigorosamente o protocólo estabelecido:"},
         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_0"]}"}},
         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{images_patient["image_1"]}"}}
     ]
