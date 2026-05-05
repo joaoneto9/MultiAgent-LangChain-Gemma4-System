@@ -3,8 +3,8 @@ import pandas as pd
 from pathlib import Path
 from deepeval import evaluate
 from deepeval.metrics import GEval
-from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import Golden, SingleTurnParams
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 SYSTEM_INPUT_LLM = """
 Você é um médico radiologista sênior. Sua tarefa é realizar uma análise sistemática e rigorosa de radiografias de tórax, garantindo a detecção de alterações vasculares, cardíacas e estruturais (incluindo achados degenerativos e crônicos).
@@ -59,14 +59,14 @@ def regex_model_response(df: pd.DataFrame) -> pd.DataFrame:
 
     return df_clone
 
-def df_to_data_eval(df: pd.DataFrame):
+def df_to_data_eval(df: pd.DataFrame) -> EvaluationDataset:
     """
     A análize do modelo vai se basear no julgamento dos findigns no final, apenas.
     """
     goldens = []
 
     for index, row in df.iterrows():
-        case = Golden(
+        case: Golden = Golden(
             input=f"System: {SYSTEM_INPUT_LLM} \n\n User: {USER_INPUT_LLM}",
             actual_output=row["model_response"],
             retrieval_context= [
@@ -74,11 +74,11 @@ def df_to_data_eval(df: pd.DataFrame):
                     f"Laudo de referência (Gabarito): {row['real_report']}"
                 ],
             expected_output=row["real_report"]
-        )
+        ) # type: ignore
 
         goldens.append(case)
 
-    return EvaluationDataset(goldens)
+    return EvaluationDataset(goldens=goldens)
 
 def generate_geval_FP_FN_clinic_findings():
     return GEval(
@@ -104,11 +104,17 @@ def generate_geval_FP_FN_clinic_findings():
 if __name__ == "__main__":
     df_model_reports = regex_model_response(df)
     dataset = df_to_data_eval(df_model_reports)    
+    
+    for golden in dataset.goldens:
+        test_case = LLMTestCase(
+            input=golden.input,
+            actual_output=golden.actual_output,
+            retrieval_context= golden.retrieval_context,
+            expected_output=golden.expected_output
+        )
+        dataset.add_test_case(test_case)
 
-    evaluate(
-        test_cases=dataset.test_cases,
-        metrics=[generate_geval_FP_FN_clinic_findings()]
-    )
+    evaluate(test_cases=dataset.test_cases, metrics=[generate_geval_FP_FN_clinic_findings()])
 
 
 
