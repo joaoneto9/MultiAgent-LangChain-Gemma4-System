@@ -45,7 +45,7 @@ path_csv = Path.home() / "Downloads" / "HUAC-DICOM-TORAX-DCM" / "model_x_reports
 df = pd.read_csv(path_csv)
 
 def regex_text(text: str):
-    regex = r"\*\*RADIOGRAFIA DO TÓRAX – PA E PERFIL\*\*\n\n\*(.*)"
+    regex = r"\*\*RESUMO GERAL\*\*\n\n\*(.*)"
     resultado = re.search(regex, text, re.DOTALL)
 
     if resultado:

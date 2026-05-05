@@ -4,20 +4,18 @@ from pathlib import Path
 from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
-MODEL_ID = "gemma4:e4b"
+MODEL_ID = "qwen3.5:9b"
 THINKING = True
 
 llm = ChatOllama(
     model=MODEL_ID,
-    reasoning=THINKING, # Obs: se o modelo usa o reasoning por padrao -> None: <think> label aparecera na resposta, True: removera.
-    temperature=0.7,
-    top_k=35,
-    top_p=0.9
+    reasoning=THINKING # Obs: se o modelo usa o reasoning por padrao -> None: <think> label aparecera na resposta, True: removera.
 )
 
 def get_model_id():
     return MODEL_ID
 
+# OBS: Olhar nas documentações dos modelos como realizar os prompts -> eles indicam o melhor formato
 def send_to_gemma4(images_patient) -> dict:
     system_prompt = """
 Você é um médico radiologista sênior. Sua tarefa é realizar uma análise sistemática e rigorosa de radiografias de tórax.
@@ -38,8 +36,8 @@ REGRAS DE FORMATO DAS ANÁLISES (OBRIGATÓRIO):
 - Idioma: Português do Brasil.
 
 RESUMO GERAL (OBRIGATÓRIO):
-- No fim da análize de todos os pontos (0 a 6) realize um resumo geral da análise no seguinte formato.
-- Em seguida informe esses aspectos em bullet points ('-') de forma objetiva:
+- No fim da análize de todos os pontos (0 a 6) realize um resumo geral da análise no formato:
+- Informando os aspectos em bullet points ('-') de forma objetiva:
     1. Indique as anomalias nos Ossos e nas Partes Moles, caso não apresente indique que a estruturas ósseas não apresenta alteração. (análise 1)
     2. Indique a situação da traqueia. (análise 2)
     3. Indique a perviedade dos brônquios principais. (análise 2)
