@@ -4,7 +4,7 @@ from pathlib import Path
 from langchain_ollama import ChatOllama
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
-MODEL_ID = "qwen3.5:9b"
+MODEL_ID = "gemma4:e4b"
 THINKING = True
 
 llm = ChatOllama(
@@ -37,6 +37,7 @@ REGRAS DE FORMATO DAS ANÁLISES (OBRIGATÓRIO):
 
 RESUMO GERAL (OBRIGATÓRIO):
 - No fim da análize de todos os pontos (0 a 6) realize um resumo geral da análise no formato:
+- Inicie com o título "RESUMO GERAL:".
 - Informando os aspectos em bullet points ('-') de forma objetiva:
     1. Indique as anomalias nos Ossos e nas Partes Moles, caso não apresente indique que a estruturas ósseas não apresenta alteração. (análise 1)
     2. Indique a situação da traqueia. (análise 2)
@@ -115,7 +116,7 @@ def images_patient_responses():
 
 if __name__ == "__main__":
     dict_responses = images_patient_responses()
-    df = pd.Series(dict_responses).to_frame(name="Gemma4-x-ray-findings")
+    df = pd.Series(dict_responses).to_frame(name=f"{MODEL_ID}-x-ray-findings")
 
     df.to_json(f'{MODEL_ID}_x_ray_findings.json', orient='index', indent=4, force_ascii=False)
     

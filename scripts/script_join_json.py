@@ -12,19 +12,19 @@ def read_file(path):
 if __name__ == "__main__":
     path_to_save =  Path.home() / "Downloads" / "HUAC-DICOM-TORAX-DCM" / f"model_{get_model_id()}_x_reports.csv"
     reports_json_path = Path.home() / "Downloads" / "HUAC-DICOM-TORAX-DCM" / "patients_reports.json"
-    gemma4_findings_json_path = f"../{get_model_id()}_x_ray_findings.json"
+    model_findings_json_path = f"../{get_model_id()}_x_ray_findings.json"
 
     reports_json = read_file(reports_json_path)
-    gemma4_findings_json = read_file(gemma4_findings_json_path)
+    model_findings_json = read_file(model_findings_json_path)
 
     data = []
 
     for key in reports_json.keys():
         data.append({
             "id_patient": key,
-            "model_response": gemma4_findings_json[key]["Gemma4-x-ray-findings"]["response"],
-            "model_reasoning": gemma4_findings_json[key]["Gemma4-x-ray-findings"]["reasoning"],
-            "real_report": reports_json[key]['report']
+            "model_response": model_findings_json[key][f"{get_model_id()}-x-ray-findings"]["response"],
+            "model_reasoning": model_findings_json[key][f"{get_model_id()}-x-ray-findings"]["reasoning"],
+            "real_report": reports_json[key]["real_report"]
         })
 
     df = pd.DataFrame(data)
