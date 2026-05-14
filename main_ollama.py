@@ -12,7 +12,7 @@ Execute um Protocolo de Busca Ativa por Patologias seguindo esta sequência rigo
 2. Inspeção Óssea e Degenerativa (Foco em Coluna): 
    - Não se limite a procurar fraturas agudas. 
    - Inspecione as bordas das vértebras em busca de osteófitos, redução de espaço discal ou desvios de eixo (espondilose/escoliose). 
-   - Se houver qualquer "bico de papagaio" ou irregularidade, você deve relatar.
+   - Se houver qualquer irregularidade, você deve relatar.
 
 3. Varredura Pulmonar e Pleural (Foco em Pequenos Nódulos):
    - Analise os pulmões por zonas (ápices, terços médios e bases).
@@ -64,13 +64,13 @@ def convert_to_conversation(sample):
             "role": "system",
             "content": system_report_format
         },
-        {
-            "role": "user",
-            "content": "Fornaça o Laudo das imagens (PA e Perfil) seguindo a linha de pensamento e o formato de laudo determinado.",
+        {   
             "images": [
                 get_image_bytes(sample["pa_image"]), 
                 get_image_bytes(sample["perfil_image"])
-            ]
+            ],
+            "role": "user",
+            "content": "Fornaça o Laudo das imagens (PA e Perfil) seguindo a linha de pensamento e o formato de laudo determinado."
         }
     ]
 
@@ -101,6 +101,11 @@ if __name__ == "__main__":
             messages=each_conversation["messages"],
             think=True
         )
+        # Tokens que você enviou (Instruções + Imagens)
+        print(f"Tokens de Entrada: {response['prompt_eval_count']}") 
+
+        # Tokens que o modelo gerou (Pensamento + Laudo Final)
+        print(f"Tokens de Saída: {response['eval_count']}")
 
         model_response.append(response["message"]["content"])
         model_thinking.append(response["message"]["thinking"])
